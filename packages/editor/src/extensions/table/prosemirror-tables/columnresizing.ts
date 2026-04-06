@@ -169,7 +169,7 @@ function handleMouseDown(
 
   if (
     event.target instanceof Element &&
-    event.target.closest(".column-resize-handle") == null
+    event.target.closest(".column-resize-handle.active") == null
   ) {
     console.log("No handle target");
     return false;
