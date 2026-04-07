@@ -160,7 +160,7 @@ export const useEditor = (
   const tags = useTagStore((state) => state.items);
   const insets = useGlobalSafeAreaInsets();
   const isDefaultEditor = editorId === "";
-  const saveCount = useRef(0);
+  const saveCount = useRef<Record<string, number>>({});
   const lastContentChangeTime = useRef<Record<string, number>>({});
   const lock = useRef(false);
   const currentLoadingNoteId = useRef<string>(undefined);
@@ -246,9 +246,9 @@ export const useEditor = (
         clearTimeout(timers.current["loading-images" + noteId]);
       }
 
-      saveCount.current = 0;
       currentLoadingNoteId.current = undefined;
       lock.current = false;
+      saveCount.current[tabId] = 0;
       resetContent && postMessage(NativeEvents.title, "", tabId);
       resetContent && (await commands.clearContent(tabId));
       resetContent && (await commands.clearTags(tabId));
@@ -429,10 +429,9 @@ export const useEditor = (
           lastContentChangeTime.current[id] = note.dateEdited;
 
           if (
-            saveCount.current < 2 ||
+            saveCount.current[tabId] < 2 ||
             currentNotes.current[id]?.title !== note.title ||
-            currentNotes.current[id]?.headline?.slice(0, 200) !==
-              note.headline?.slice(0, 200)
+            currentNotes.current[id]?.headline !== note.headline
           ) {
             Navigation.queueRoutesForUpdate();
           }
@@ -448,7 +447,11 @@ export const useEditor = (
           currentNotes.current[id] = note;
         }
 
-        saveCount.current++;
+        if (!saveCount.current[tabId]) {
+          saveCount.current[tabId] = 1;
+        } else {
+          saveCount.current[tabId]++;
+        }
 
         clearTimeout(timers.current.onsave);
         timers.current.onsave = setTimeout(async () => {
@@ -557,6 +560,7 @@ export const useEditor = (
               useTabStore.getState().newTabSession(tabId, {});
             }
           }
+          saveCount.current[tabId] = 0;
 
           setTimeout(() => {
             if (state.current?.ready && !state.current.movedAway)
@@ -689,6 +693,7 @@ export const useEditor = (
           currentNotes.current[item.id] = item;
 
           editorSessionHistory.newSession(item.id);
+          saveCount.current[tabId] = 0;
 
           await commands.setStatus(
             getFormattedDate(item.dateEdited, "date-time"),
