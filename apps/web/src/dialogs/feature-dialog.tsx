@@ -89,7 +89,22 @@ const features: Record<FeatureKeys, Feature> = {
             )
           }
         ]
-      : [],
+      : [
+          {
+            title: "Improved UX on password reset flow",
+            subtitle:
+              "We've added some minor UX improvements to the password reset flow"
+          },
+          {
+            title: "Title $headline$ format change",
+            subtitle:
+              "The $headline$ format will now only be extracted from the first paragraph/heading of the note (up to 60 characters)."
+          },
+          {
+            title: "Various bug fixes",
+            subtitle: "We have squashed various bugs in this release."
+          }
+        ],
     cta: {
       title: strings.gotIt(),
       icon: Checkmark,
