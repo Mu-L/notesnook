@@ -47,7 +47,8 @@ import {
   Notebook as NotebookIcon,
   Plus,
   SortBy,
-  Tag as TagIcon
+  Tag as TagIcon,
+  ClearTrash
 } from "../icons";
 import { SortableNavigationItem } from "./navigation-item";
 import {
@@ -93,6 +94,8 @@ import { Color, Notebook, Tag } from "@notesnook/core";
 import { handleDrop } from "../../common/drop-handler";
 import { Menu, useMenuStore, useMenuTrigger } from "../../hooks/use-menu";
 import { RenameColorDialog } from "../../dialogs/item-dialog";
+import { ConfirmDialog } from "../../dialogs/confirm";
+import { showToast } from "../../utils/toast";
 import { strings } from "@notesnook/intl";
 import Tags from "../../views/tags";
 import { Notebooks } from "../../views/notebooks";
@@ -515,6 +518,7 @@ function RouteItem({
   context?: { isCollapsed: boolean; collapse: () => void };
 }) {
   const [location] = useLocation();
+  const trash = useTrashStore((store) => store.trash);
 
   return (
     <SortableNavigationItem
@@ -545,6 +549,39 @@ function RouteItem({
         context?.collapse();
       }}
       menuItems={[
+        ...(item.id === "trash"
+          ? [
+              {
+                type: "button" as const,
+                key: "clear-trash",
+                title: strings.clearTrash(),
+                isDisabled: !trash || trash.length === 0,
+                icon: ClearTrash.path,
+                onClick: async () => {
+                  const ok = await ConfirmDialog.show({
+                    title: strings.clearTrash(),
+                    positiveButtonText: strings.clear(),
+                    negativeButtonText: strings.cancel(),
+                    message: strings.clearTrashDesc()
+                  });
+                  if (!ok) return;
+
+                  try {
+                    await useTrashStore.getState().clear();
+                    showToast("success", strings.trashCleared());
+                  } catch (e) {
+                    if (e instanceof Error)
+                      showToast(
+                        "error",
+                        `${strings.couldNotClearTrash()} ${strings.error()}: ${
+                          e.message
+                        }`
+                      );
+                  }
+                }
+              }
+            ]
+          : []),
         {
           type: "lazy-loader",
           key: "sidebar-items-loader",
