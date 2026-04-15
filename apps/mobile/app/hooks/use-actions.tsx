@@ -382,6 +382,16 @@ export const useActions = ({
   }
 
   const deleteItem = async () => {
+    if (isPublished) {
+      ToastManager.show({
+        heading: strings.notePublished(),
+        message: strings.unpublishToDelete(),
+        type: "error",
+        context: "local"
+      });
+      return;
+    }
+
     close();
     await sleep(300);
 
@@ -1237,7 +1247,8 @@ export const useActions = ({
           : strings.moveToTrash(),
       icon: "delete-outline",
       type: "error",
-      onPress: deleteItem
+      onPress: deleteItem,
+      locked: isPublished
     });
   }
 
