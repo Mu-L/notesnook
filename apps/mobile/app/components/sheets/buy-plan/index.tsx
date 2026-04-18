@@ -23,6 +23,7 @@ import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 import {
   Linking,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -211,16 +212,19 @@ export const BuyPlan = (props: {
               ? strings["5yearPlanConditions"]()
               : [
                   strings.trialPlanConditions[0](
-                    billingDuration?.duration as number
+                    billingDuration?.duration as number as never
                   ),
-                  strings.trialPlanConditions[1](0)
+                  ...(isGithubRelease
+                    ? []
+                    : [strings.trialPlanConditions[1](Platform.OS as never)])
                 ]
             ).map((item) => (
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 10
+                  gap: 10,
+                  flex: 1
                 }}
                 key={item}
               >
@@ -229,7 +233,13 @@ export const BuyPlan = (props: {
                   size={AppFontSize.lg}
                   name="check"
                 />
-                <Paragraph>{item}</Paragraph>
+                <Paragraph
+                  style={{
+                    flexShrink: 1
+                  }}
+                >
+                  {item}
+                </Paragraph>
               </View>
             ))}
           </View>
@@ -243,8 +253,8 @@ export const BuyPlan = (props: {
             is5YearPlanSelected
               ? strings.purchase()
               : pricingPlans?.userCanRequestTrial
-              ? strings.subscribeAndStartTrial()
-              : strings.subscribe()
+                ? strings.subscribeAndStartTrial()
+                : strings.subscribe()
           }
           onPress={async () => {
             if (isGithubRelease) {
@@ -380,6 +390,20 @@ const ProductItem = (props: {
       });
   }, []);
 
+  const discountValue =
+    (isAnnual && !isGithubRelease) ||
+    (isGithubRelease && (product as Plan)?.discount?.amount)
+      ? regionalDiscount
+        ? regionalDiscount.discount
+        : isGithubRelease
+          ? (product as Plan).discount?.amount
+          : props.pricingPlans.compareProductPrice(
+              props.pricingPlans.currentPlan?.id as string,
+              `notesnook.${props.pricingPlans.currentPlan?.id}.yearly`,
+              `notesnook.${props.pricingPlans.currentPlan?.id}.monthly`
+            )
+      : undefined;
+
   return (
     <TouchableOpacity
       style={{
@@ -420,12 +444,11 @@ const ProductItem = (props: {
             {isAnnual
               ? strings.yearly()
               : is5YearProduct
-              ? strings.fiveYearPlan()
-              : strings.monthly()}
+                ? strings.fiveYearPlan()
+                : strings.monthly()}
           </Heading>
 
-          {(isAnnual && !isGithubRelease) ||
-          (isGithubRelease && (product as Plan)?.discount?.amount) ? (
+          {discountValue ? (
             <View
               style={{
                 backgroundColor: colors.static.red,
@@ -436,18 +459,7 @@ const ProductItem = (props: {
               }}
             >
               <Heading color={colors.static.white} size={AppFontSize.xs}>
-                {strings.bestValue()} -{" "}
-                {strings.percentOff(
-                  (regionalDiscount
-                    ? regionalDiscount.discount
-                    : isGithubRelease
-                    ? (product as Plan).discount?.amount
-                    : props.pricingPlans.compareProductPrice(
-                        props.pricingPlans.currentPlan?.id as string,
-                        `notesnook.${props.pricingPlans.currentPlan?.id}.yearly`,
-                        `notesnook.${props.pricingPlans.currentPlan?.id}.monthly`
-                      )) as string
-                )}
+                {strings.bestValue()} - {strings.percentOff(`${discountValue}`)}
               </Heading>
             </View>
           ) : null}
