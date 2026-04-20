@@ -28,7 +28,11 @@ import {
   ToastManager
 } from "../../../services/event-manager";
 import SettingsService from "../../../services/settings";
-import { eAfterSync, eCloseSheet } from "../../../utils/events";
+import {
+  eAfterSync,
+  eCloseSheet,
+  eMenuItemUpdate
+} from "../../../utils/events";
 import { SideMenuItem } from "../../../utils/menu-items";
 import { AppFontSize } from "../../../utils/size";
 import { DefaultAppStyles } from "../../../utils/styles";
@@ -121,6 +125,7 @@ export const MenuItemProperties = ({ item }: { item: SideMenuItem }) => {
                       positivePress: async () => {
                         await db.trash.clear();
                         useTrashStore.getState().clear();
+                        eSendEvent(eMenuItemUpdate);
                         eSendEvent(eAfterSync);
                         ToastManager.show({
                           message: strings.trashCleared(),
