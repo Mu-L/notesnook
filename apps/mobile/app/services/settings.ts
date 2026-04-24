@@ -52,11 +52,10 @@ function resetSettings() {
     defaultSnoozeTime: get().defaultSnoozeTime,
     defaultFontFamily: get().defaultFontFamily,
     defaultFontSize: get().defaultFontSize,
-    privacyScreen: get().privacyScreen,
     corsProxy: get().corsProxy,
     showBackupCompleteSheet: get().showBackupCompleteSheet
   };
-
+  setPrivacyScreen(false);
   MMKV.setString("appSettings", JSON.stringify(settings));
   set(settings);
   init();
@@ -99,6 +98,7 @@ function migrateSettings(settings: SettingStore["settings"]) {
     settings.privacyScreen = settings.appLockEnabled
       ? true
       : settings.privacyScreen;
+    setPrivacyScreen(settings.privacyScreen);
     MMKV.setString("appSettings", JSON.stringify(settings));
   }
 }
